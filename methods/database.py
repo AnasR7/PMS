@@ -1,5 +1,6 @@
 import mysql.connector as con
 from flask import Flask
+from datetime import datetime as dt
 
 
 def connection():
@@ -15,3 +16,12 @@ def authenticate(email, passwd):
         return True
     else:
         return False
+
+def insertProduct(path, uploader):
+    con = connection()
+    cursor = con.cursor()
+    cur_time = dt.now().strftime('%s')
+    sql = "INSERT INTO katalog (path, user_email, upload_date) VALUES (%s, %s, %s)"
+    cursor.execute(sql, (path, uploader, cur_time))
+    con.commit()
+    return True
