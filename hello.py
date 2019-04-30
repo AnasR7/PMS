@@ -14,7 +14,7 @@ def dashboard():
    if not session.get('logged_in'):
         return render_template('index.html')
    try:
-        return('hi ' +  str(session['user']))
+        return render_template('dashboard.html')
    except Exception as e:
         return('failure')
 
@@ -25,7 +25,8 @@ def index():
                 session['logged_in'] = True
                 session['user'] = request.form['email']
 
-    return dashboard()
+    return render_template('index.html')
+
 
 @app.route('/', methods=['GET', 'POST'])
 def tree():
