@@ -25,3 +25,11 @@ def insertProduct(path, uploader):
     cursor.execute(sql, (path, uploader, cur_time))
     con.commit()
     return True
+
+def getProducts(limit, offset):
+    con = connection()
+    cursor = con.cursor(buffered=True, dictionary=True)
+    sql = 'select * from katalog limit %s offset %s'
+    cursor.execute(sql, (limit, offset))
+    result = cursor.fetchall()
+    return result

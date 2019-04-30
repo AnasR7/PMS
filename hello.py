@@ -1,7 +1,8 @@
 from flask import Flask, flash, redirect, render_template, request, session, abort
 import sys, os
-from methods.database import connection, authenticate, insertProduct
+from methods.database import connection, authenticate, insertProduct, getProducts
 from werkzeug.utils import secure_filename
+
 
 UPLOAD_FOLDER = 'Products/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
@@ -13,6 +14,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def dashboard():
    if not session.get('logged_in'):
         return render_template('index.html')
+
    try:
         return render_template('dashboard.html')
    except Exception as e:
@@ -24,8 +26,9 @@ def index():
         if authenticate(request.form['email'], request.form['pass']):
                 session['logged_in'] = True
                 session['user'] = request.form['email']
+                return dashboard()
 
-    return render_template('index.html')
+    return redirect('/admin')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -44,6 +47,12 @@ def allowed_file(filename):
 @app.route("/home", methods=['GET', 'POST'])
 def home():
     return render_template('market.html')
+
+
+@app.route("/test", methods=['GET', 'POST'])
+def test():
+    return str(getProducts(offset=1,limit=10))
+
 
 @app.route('/admin/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -65,7 +74,7 @@ def upload_file():
             insertProduct(path = path, uploader= session.get('user'))
             return redirect(request.url)
 
-    return render_template('UploadP.html')
+    return render_template('Upload.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
