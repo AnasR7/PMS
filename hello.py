@@ -2,12 +2,25 @@ from flask import Flask, flash, redirect, render_template, request, session, abo
 import sys, os
 from methods.database import connection, authenticate, insertProduct, getProducts, delProduct
 from werkzeug.utils import secure_filename
+from flask_mail import Mail, Message
 
 
 UPLOAD_FOLDER = 'Products/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
+
+mail_setting = {
+    "MAIL_SERVER": 'smtp.gmail.com',
+    "MAIL_USE_TLS": False,
+    "MAIL_USE_SSL": True,
+    "MAIL_PORT": 465,
+    "MAIL_USERNAME": 'm7mdbawazeer@gmail.com',
+    "MAIL_PASSWORD": 'bawazeer21'
+}
+app.config.update(mail_setting)
+mail = Mail(app)
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route("/admin", methods=['GET', 'POST'])
@@ -75,6 +88,20 @@ def upload_file():
             return redirect(request.url)
 
     return render_template('Upload.html')
+
+
+
+@app.route('/sendmail', methods=['GET', 'POST'])
+def sendmail():
+    with app.app_context():
+        msg = Message(sender=app.config.get("MAIL_USERNAME"),
+                        recipients=['m7mdbawazeer@gmail.com'])
+        msg.subject=' Hello '
+        msg.body = " President Printing "
+        with app.open_resource("image.png") as fp:
+            msg.attach("image.png", "image/png", fp.read())
+        mail.send(msg)
+    return 'Done'
 
 @app.errorhandler(404)
 def page_not_found(e):
