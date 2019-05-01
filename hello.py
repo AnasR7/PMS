@@ -1,6 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, session, abort
 import sys, os
-from methods.database import connection, authenticate, insertProduct, getProducts
+from methods.database import connection, authenticate, insertProduct, getProducts, delProduct
 from werkzeug.utils import secure_filename
 
 
@@ -51,7 +51,7 @@ def home():
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-    return str(getProducts(offset=1,limit=10))
+    return str(delProduct(3, app))
 
 
 @app.route('/admin/upload', methods=['GET', 'POST'])
