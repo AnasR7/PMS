@@ -5,7 +5,8 @@ from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 
 
-UPLOAD_FOLDER = 'Products/'
+UPLOAD_FOLDER = 'static/Products/'
+UPLOAD_ORDER = 'Order/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg'])
 
 app = Flask(__name__)
@@ -59,13 +60,31 @@ def allowed_file(filename):
 
 @app.route("/home", methods=['GET', 'POST'])
 def home():
-    return render_template('market.html')
+    product = getProducts(10, 0)
+    return render_template('market.html', container=product)
+
+@app.route('/product/<int:id>') # nope --> `int:`
+def detailProduct_user(id):
+
+    product = getProducts(1, 0, condition={'column': 'id', 'operand': id})
+    return render_template('detail_user.html', container=product[0])
 
 
-@app.route("/test", methods=['GET', 'POST'])
-def test():
-    return str(delProduct(3, app))
+@app.route("/admin/catalogue", methods=['GET', 'POST'])
+def catalogue():
+    if not session.get('logged_in'):
+         return redirect('/admin')
 
+    product = getProducts(10, 0)
+    return render_template('catalogue.html', container=product)
+
+@app.route('/admin/product/<int:id>') # nope --> `int:`
+def detailProduct(id):
+    if not session.get('logged_in'):
+         return redirect('/admin')
+
+    product = getProducts(1, 0, condition={'column': 'id', 'operand': id})
+    return render_template('detail.html', container=product[0])
 
 @app.route('/admin/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -84,7 +103,7 @@ def upload_file():
             filename = secure_filename(file.filename)
             path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(path)
-            insertProduct(path = path, uploader= session.get('user'))
+            insertProduct(path = 'Products/'+filename, uploader= session.get('user'))
             return redirect(request.url)
 
     return render_template('Upload.html')
@@ -93,15 +112,23 @@ def upload_file():
 
 @app.route('/sendmail', methods=['GET', 'POST'])
 def sendmail():
-    with app.app_context():
-        msg = Message(sender=app.config.get("MAIL_USERNAME"),
-                        recipients=['m7mdbawazeer@gmail.com'])
-        msg.subject=' Hello '
-        msg.body = " President Printing "
-        with app.open_resource("image.png") as fp:
-            msg.attach("image.png", "image/png", fp.read())
-        mail.send(msg)
-    return 'Done'
+    if request.method == 'POST':
+        file =  request.files['file']
+        filename = secure_filename(file.filename)
+        path = os.path.join(UPLOAD_ORDER, filename)
+        file.save(path)
+
+        with app.app_context():
+            msg = Message(sender=app.config.get("MAIL_USERNAME"),
+                            recipients=[request.form['email']])
+            msg.subject=' Printing Order '
+            msg.body = "Name: " + request.form['Name'] + '\nphone number: ' + request.form['phone'] + "\nmessage: " + request.form['AdditionalM'] + '  '
+            with app.open_resource(UPLOAD_ORDER + filename) as fp:
+                msg.attach(filename, 'image/png', fp.read())
+
+            mail.send(msg)
+            return home()
+    return home()
 
 @app.errorhandler(404)
 def page_not_found(e):
